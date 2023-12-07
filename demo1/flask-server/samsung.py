@@ -480,8 +480,6 @@ while(query!='exit'):
 
       print('\n')
       gen_final(query,query_final)
-      print('답변 : ',gen_final(query,query_final))
-
 
 @app.route('/process_query')
 def process_query():

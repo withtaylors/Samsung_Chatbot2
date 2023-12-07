@@ -16,4 +16,3 @@ elasticsearch openai tiktoken langchain
 elasticsearch
 bitsandbytes
 accelerate
--i https://test.pypi.org/simple/ bitsandbytes
