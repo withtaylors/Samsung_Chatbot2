@@ -1,0 +1,51 @@
+/** Noto Sans(Google Fonts) */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap");
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+/* Pretendard(https://noonnu.cc/font_page/694) */
+@font-face {
+  font-family: "Pretendard-Regular";
+  src: url("https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff")
+    format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Pretendard-SemiBold";
+  src: url("https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-SemiBold.woff")
+    format("woff");
+  font-weight: 500;
+  font-style: medium;
+}
+@font-face {
+  font-family: "Pretendard-Bold";
+  src: url("https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Bold.woff")
+    format("woff");
+  font-weight: 600;
+  font-style: bold;
+}
+
+:root {
+  --pretendard-regular: "Pretendard-Regular";
+  --pretendard-semi: "Pretendard-SemiBold";
+  --pretendard-bold: "Pretendard-Bold";
+
+  --noto-sans: -apple-system, "Noto Sans KR", sans-serif;
+}
+
+html {
+  font-family: var(--pretendard-regular);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+a,
+h1,
+h2,
+h3,
+h4,
+button {
+  font-family: var(--pretendard-sans);
+  font-weight: 500;
+}
