@@ -72,42 +72,10 @@ def custom_text_splitter(texts, chunk_size, chunk_overlap):
 data_split_text = custom_text_splitter(data, 100, 30)
 data_split_graph = custom_text_splitter(data_graph, 100, 30)
 
-# Create FAISS document stores
-embedding_dim = 768  # Adjust this based on your embedding model
-db_faiss_text = FAISSDocumentStore(embedding_dim=embedding_dim)
-db_faiss_graph = FAISSDocumentStore(embedding_dim=embedding_dim)
-
-
-
-
-from transformers import AutoTokenizer, AutoModel
-import torch
-
-# Initialize tokenizer and model
-tokenizer = AutoTokenizer.from_pretrained("jhgan/ko-sroberta-multitask")
-model = AutoModel.from_pretrained("jhgan/ko-sroberta-multitask")
-
-def generate_embedding(text):
-    # Tokenize and create tensor
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    # Generate embeddings
-    with torch.no_grad():
-        outputs = model(**inputs)
-    # Typically, you might use the mean of the last hidden state
-    embeddings = outputs.last_hidden_state.mean(dim=1)
-    return embeddings.numpy()
-
-# Now use the function to generate embeddings
-for text in data_split_text:
-    embedding = generate_embedding(text)
-    embedding = embedding[0]  # Reshape if necessary
-    db_faiss_text.write_documents([{"content": text, "embedding": embedding.tolist()}])
-
-# Repeat for graph data
-for text in data_split_graph:
-    embedding = generate_embedding(text)
-    embedding = embedding[0]  # Reshape if necessary
-    db_faiss_graph.write_documents([{"content": text, "embedding": embedding.tolist()}])
+# embedding
+embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
+db_faiss_text = FAISS.from_documents(data_split_text, embeddings)
+db_faiss_graph = FAISS.from_documents(data_split_graph, embeddings)
 
 
 from rank_bm25 import BM25Okapi
@@ -148,35 +116,47 @@ ensemble_retriever = EnsembleRetriever(retrievers=[bm25_retriever, faiss_retriev
 
 # 로컬 llm가져오기
 def load_local_llm():
-  model='davidkim205/komt-mistral-7b-v1'
-  # lora학습법 사용
-  # peft-parameter efficient fine tunning (일부의 파라미터만 튜닝)
-  peft_model_name = 'davidkim205/komt-mistral-7b-v1-lora'
-  config = PeftConfig.from_pretrained(peft_model_name)
-  # 4비트 양자화를 시켜서 가져옴. 그냥 가져오면 너무 크다
-  bnb_config = BitsAndBytesConfig(
-      load_in_4bit=True,
-      bnb_4bit_use_double_quant=True,
-      bnb_4bit_quant_type="nf4",
-      bnb_4bit_compute_dtype=torch.bfloat16
-  )
-  config.base_model_name_or_path =model
-  model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, quantization_config=bnb_config, device_map="auto")
-  model = PeftModel.from_pretrained(model, peft_model_name)
-  return model
+    model_id='mncai/llama2-13b-dpo-v3'
+    bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16
+    )
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=bnb_config, device_map={"":0})
+    return model
 
 model=load_local_llm()
-# 토크나이저
-tokenizer = AutoTokenizer.from_pretrained(PeftConfig.from_pretrained('davidkim205/komt-mistral-7b-v1-lora').base_model_name_or_path)
+
+tokenizer = AutoTokenizer.from_pretrained('mncai/llama2-13b-dpo-v3')
 streamer = TextStreamer(tokenizer)
 
+stop_list = ['### ','###','### example:']
+
+stop_token_ids = [tokenizer(x)['input_ids'] for x in stop_list]
+stop_token_ids
+stop_token_ids = [torch.LongTensor(x).to(0) for x in stop_token_ids]
+stop_token_ids
+
+
+# define custom stopping criteria object
+class StopOnTokens(StoppingCriteria):
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        for stop_ids in stop_token_ids:
+            if torch.eq(input_ids[0][-len(stop_ids):], stop_ids).all():
+                return True
+        return False
+
+stopping_criteria = StoppingCriteriaList([StopOnTokens()])
 
 from konlpy.tag import Okt
 
 #객체 생성
-okt = Okt()
+
 # 파일리스트는 가져옴
-file_list=os.listdir('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 png 파일')
+file_list=os.listdir('drive/MyDrive/[FINAL] 그래프 png 파일')
 file_names = file_list
 
 text=file_list
@@ -199,7 +179,7 @@ list_of_documents = [
 
 db_faiss_graghs = FAISS.from_documents(list_of_documents, embeddings)
 
-# def 그래프 -> 한번 시도해보기. 질문과 가장 관련된 파일을 가져오기
+#def 그래프 -> 한번 시도해보기. 질문과 가장 관련된 파일을 가져오기
 def graphs(x,docs_input):
     generation_config = GenerationConfig(
         temperature=1,
@@ -209,12 +189,12 @@ def graphs(x,docs_input):
         early_stopping=True,
         do_sample=True,
     )
-    template = f"""[INST]
+    template = f"""### instruction:
         아래 문서는 그래프에 대한 해석이다.
         문서에 주어진 내용만을 이용해서 답하고 문서에서 근거를 찾을 수 없거나 답변하기 모호하면 정보를 찾을 수 없습니다. 라고 답변해줘.
 
         문서: {docs_input}
-        질문: {x} [/INST]
+        질문 = {x}\n\n### Response:
         output ():
     """
 
@@ -246,15 +226,15 @@ def make_similar_query(x):
         temperature=1,
         top_p=0.8,
         top_k=100,
-        max_new_tokens=300,
+        max_new_tokens=60,
         early_stopping=True,
         do_sample=True,
     )
     # 비슷한 문장을 두개 만들어줌. 쿼리가 조금만 달라져도 가지고 오는 문서가 다르기에 - 질문과 관련된 문서 가지고올 확률 높아짐
-    template = f"""[INST]
+    template = f"""### instruction:
         질문과 관련된 2개의 다중 검색 질문를 생성해줘.
 
-        질문: {x} [/INST]
+        질문= {x} ### Response:
         output (주어진 질문과 유사한 질문 2개):
     """
 
@@ -292,10 +272,10 @@ def find_core(x):
         early_stopping=True,
         do_sample=True,
     )
-    template = f"""[INST]
+    template = f"""### instruction:
         사실만을 말하는 금융 전문가로서 답해줘.
 
-        질문: {x} [/INST]
+        질문: {x}\n\n### Response:
 
     """
     q = template
@@ -330,9 +310,10 @@ def gen_final(x,docs_input):
         max_new_tokens=300,
         early_stopping=True,
         do_sample=True,
+        repetition_penalty=1.2,
     )
     # 많이 시도하면서 보완하면서 작성. 답변을 잘 하지 못하는 케이스 파악 후 보완
-    template = f"""[INST]
+    template = f"""### instruction:
         너는 사실만을 말하는 금융 전문가야.
         질문이 주어진 문서의 내용과 관련이 있다면, 해당 문서를 바탕으로 구체적이고 명확한 답변을 해줘.
         모든 문서의 내용을 이해하고 고려해서 질문과 관련된 정보를 모두 찾아 답변 해줘.
@@ -346,8 +327,9 @@ def gen_final(x,docs_input):
         문서 내용과 관련 없거나 애매한 질문이면 '내용을 찾을 수 없습니다.'라고 답변해줘.
         소속이나 존재를 묻는 질문은 문서에 정확하게 일치하는 내용이 없다면 없다고 답변해줘
         필요한 답변만 하고 불필요한 답변은 생성하면 안돼.
+        문서에서 정보를 얻을 수 없다면 임의로 생성하지 말고 반드시 '문서에서 내용을 찾을 수 없습니다.'라고 답변해줘.
         문서들: {docs_input}
-        질문: {x} [/INST]
+        질문: {x}\n\n### Response:
     """
 
     q = template
@@ -361,6 +343,7 @@ def gen_final(x,docs_input):
         generation_config=generation_config,
         pad_token_id=tokenizer.eos_token_id,
         eos_token_id=tokenizer.eos_token_id,
+        stopping_criteria=stopping_criteria,
         streamer=streamer,
     )
     result_str = tokenizer.decode(gened[0])
@@ -437,15 +420,15 @@ while(query!='exit'):
         else:
           ss=graph_docs[int(select_graph2[0])-1]
           try:
-            img_test = img.imread('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
+            img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
             plt.imshow(img_test)
             plt.show()
 
           except:
-            img_test = img.imread('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
+            img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
             plt.imshow(img_test)
             plt.show()
-          f = open('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
+          f = open('/content/drive/MyDrive/[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
           lines = f.readlines()
 
           # 각 줄을 '.' 기준으로 분리하여 출력
@@ -456,17 +439,23 @@ while(query!='exit'):
       else:
         sss=graph_docs[int(select_graph[0])-1]
         try:
-          img_test = img.imread('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
+          img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
           plt.imshow(img_test)
           plt.show()
         except:
-          img_test = img.imread('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
+          img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
           plt.imshow(img_test)
           plt.show()
-        f = open('c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
+        f = open('/content/drive/MyDrive/[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
         lines = f.readlines()
+
         for line in lines:
-          print(line)
+          parts = line.split('.')
+          for part in parts:
+            part.replace('\n\n','')
+            print(part)
+
+
       if (query=='exit'):
         print('\n종료합니다.')
         break
@@ -504,7 +493,8 @@ while(query!='exit'):
       #Reorded_docs가 최종 쿼리가 된다
       query_final=reordered_docs
 
-      gen_final('\n', query,query_final)
+      print('\n')
+      gen_final(query,query_final)
       # print('답변 : ',gen_final(query,query_final))
 
 
