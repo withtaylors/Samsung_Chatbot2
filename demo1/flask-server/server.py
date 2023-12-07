@@ -61,7 +61,6 @@ data_split_graph_documents = load_documents_from_file(graph_processing_file, enc
 db_faiss_text = FAISS.from_documents(data_split_text_documents, embeddings)
 db_faiss_graph = FAISS.from_documents(data_split_graph_documents, embeddings)
 
-
 from rank_bm25 import BM25Okapi
 
 def make_tok(sent):
