@@ -1,0 +1,16 @@
+pip install peft
+pip install Faiss-cpu
+pip install langchain
+pip install -q -U bitsandbytes
+pip install -q -U git+https://github.com/huggingface/transformers.git
+pip install -q -U git+https://github.com/huggingface/peft.git
+pip install -q -U git+https://github.com/huggingface/accelerate.git
+pip install -q datasets
+pip install konlpy
+pip install rank_bm25
+pip install sentencepiece
+pip install sentence-transformers
+pip install pypdf
+pip install "unstructured[all-docs]"
+pip install elasticsearch openai tiktoken langchain
+pip install elasticsearch
