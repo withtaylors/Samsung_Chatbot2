@@ -483,8 +483,8 @@ while(query!='exit'):
       print('답변 : ',gen_final(query,query_final))
 
 
-@app.route('/users')
-def users():
+@app.route('/process_query')
+def process_query():
     data = request.json
     query = data['query']
 
