@@ -14,3 +14,4 @@ pypdf
 "unstructured[all-docs]"
 elasticsearch openai tiktoken langchain
 elasticsearch
+bitsandbytes
