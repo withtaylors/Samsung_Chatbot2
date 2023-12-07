@@ -53,12 +53,17 @@ data = load_files_from_directory(text_processing_directory, encoding='utf-8')
 graph_processing_directory = "c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 전처리"
 data_graph = load_files_from_directory(graph_processing_directory, encoding='utf-8')
 
+from langchain.schema import Document
 
-print(data)
-print(data_graph)
-
+# 문자열 데이터를 Document 객체로 변환
+data_documents = [Document(page_content=text) for text in data]
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=100,chunk_overlap=30)
-data_split_text = text_splitter.split_documents(data)
+
+# 이제 text_splitter를 사용하여 데이터를 분할
+data_split_text = text_splitter.split_documents(data_documents)
+
+# text_splitter = RecursiveCharacterTextSplitter(chunk_size=100,chunk_overlap=30)
+# data_split_text = text_splitter.split_documents(data)
 text_splitter2 = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=30)
 data_split_graph = text_splitter2.split_documents(data_graph)
 
@@ -66,9 +71,9 @@ print(data_split_text)
 print(data_split_graph)
 
 # embedding
-# embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
-# db_faiss_text = FAISS.from_documents(data_split_text, embeddings)
-# db_faiss_graph = FAISS.from_documents(data_split_graph, embeddings)
+embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
+db_faiss_text = FAISS.from_documents(data_split_text, embeddings)
+db_faiss_graph = FAISS.from_documents(data_split_graph, embeddings)
 
 
 # from rank_bm25 import BM25Okapi
