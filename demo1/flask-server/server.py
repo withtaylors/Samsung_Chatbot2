@@ -52,8 +52,6 @@ data = load_files_from_directory(text_processing_directory)
 graph_processing_directory = "c:/Users/cloud/chatbot/demo1/flask-server/[FINAL] 그래프 전처리"
 data_graph = load_files_from_directory(graph_processing_directory)
 
-from haystack.document_stores import FAISSDocumentStore
-
 # Assuming each item in 'data' and 'data_graph' is a string representing a document
 data_formatted = [{"page_content": text} for text in data]
 data_graph_formatted = [{"page_content": text} for text in data_graph]
