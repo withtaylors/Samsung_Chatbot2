@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: ["master"]
+    branches: ["realcommang"]
   pull_request:
-    branches: ["master"]
+    branches: ["realcommang"]
 
 jobs:
   build:
@@ -25,4 +25,4 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push realcommang/sschat1:latest
+          docker push realcommang/sschat1215:latest
