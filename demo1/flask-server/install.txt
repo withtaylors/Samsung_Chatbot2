@@ -1,6 +1,7 @@
 peft
 Faiss-cpu
 Flask
+flask-cors
 langchain
 bitsandbytes
 transformers
@@ -20,3 +21,4 @@ langchain
 elasticsearch
 bitsandbytes
 accelerate
+matplotlib
