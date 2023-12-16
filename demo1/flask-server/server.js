@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.post("/process_query", (req, res) => {
   const message = req.body.message;
-  const pythonProcess = spawn("python3", ["/app/src/samsung.py", message]);
+  const pythonProcess = spawn("python", ["samsung.py", message]);
 
   pythonProcess.stdout.on("data", (data) => {
     console.log(`Received data from Python script: ${data}`);
