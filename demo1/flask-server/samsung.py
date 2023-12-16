@@ -51,10 +51,10 @@ def load_documents_from_file(filepath, encoding='utf-8'):
         print(f"Error reading file {filepath}: {e}")
         return None
 
-text_processing_file = "c:/Users/cloud/chatbot/demo1/flask-server/data_split_text.txt"
+text_processing_file = "Samsung_Chatbot2\demo1\flask-server\data_split_text.txt"
 data_split_text_documents = load_documents_from_file(text_processing_file, encoding='utf-8')
 
-graph_processing_file = "c:/Users/cloud/chatbot/demo1/flask-server/data_split_graph.txt"
+graph_processing_file = "Samsung_Chatbot2\demo1\flask-server\data_split_graph.txt"
 data_split_graph_documents = load_documents_from_file(graph_processing_file, encoding='utf-8')
 
 # FAISS.from_documents 메서드에 Document 객체 리스트와 embeddings 객체를 전달
@@ -141,7 +141,7 @@ from konlpy.tag import Okt
 #객체 생성
 
 # 파일리스트는 가져옴
-file_list=os.listdir('drive/MyDrive/[FINAL] 그래프 png 파일')
+file_list=os.listdir('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 png 파일')
 file_names = file_list
 
 text=file_list
@@ -405,15 +405,15 @@ while(query!='exit'):
         else:
           ss=graph_docs[int(select_graph2[0])-1]
           try:
-            img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
+            img_test = img.imread('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
             plt.imshow(img_test)
             plt.show()
 
           except:
-            img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
+            img_test = img.imread('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
             plt.imshow(img_test)
             plt.show()
-          f = open('/content/drive/MyDrive/[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
+          f = open('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
           lines = f.readlines()
 
           # 각 줄을 '.' 기준으로 분리하여 출력
@@ -424,14 +424,14 @@ while(query!='exit'):
       else:
         sss=graph_docs[int(select_graph[0])-1]
         try:
-          img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
+          img_test = img.imread('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
           plt.imshow(img_test)
           plt.show()
         except:
-          img_test = img.imread('drive/MyDrive/[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
+          img_test = img.imread('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
           plt.imshow(img_test)
           plt.show()
-        f = open('/content/drive/MyDrive/[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
+        f = open('Samsung_Chatbot2\demo1\flask-server\[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
         lines = f.readlines()
 
         for line in lines:
