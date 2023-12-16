@@ -1,5 +1,6 @@
 peft
 Faiss-cpu
+Flask
 langchain
 bitsandbytes
 transformers
