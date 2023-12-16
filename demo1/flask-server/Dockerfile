@@ -3,6 +3,8 @@ FROM python:3.8
 
 # 작업 디렉토리를 설정합니다.
 WORKDIR /app
+# 필요한 패키지를 설치합니다.
+RUN apt-get update && apt-get install -y python3-pip git
 
 # 의존성 파일을 복사하고 설치합니다.
 COPY demo1/flask-server/install.txt ./
@@ -15,4 +17,4 @@ COPY demo1/flask-server .
 EXPOSE 5000
 
 # Flask 애플리케이션을 실행합니다.
-CMD ["python", "server.py"]
+CMD ["python", "samsung.py"]
