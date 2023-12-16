@@ -17,4 +17,5 @@ COPY demo1/flask-server .
 EXPOSE 5000
 
 # Flask 애플리케이션을 실행합니다.
-CMD ["python", "samsung.py"]
+ENTRYPOINT ["python"]
+CMD ["samsung.py"]
