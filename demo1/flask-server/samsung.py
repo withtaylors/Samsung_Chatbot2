@@ -481,7 +481,7 @@ while(query!='exit'):
       print('\n')
       gen_final(query,query_final)
 
-@app.route('/process_query')
+@app.route('http://react-service:3000/process_query')
 def process_query():
     data = request.json
     query = data['query']

@@ -18,7 +18,7 @@ const App = () => {
     ]);
 
     try {
-      const response = await fetch("/process_query", {
+      const response = await fetch("http://flask-service:5000/process_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
