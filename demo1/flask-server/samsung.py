@@ -165,45 +165,45 @@ list_of_documents = [
 db_faiss_graghs = FAISS.from_documents(list_of_documents, embeddings)
 
 #def 그래프 -> 한번 시도해보기. 질문과 가장 관련된 파일을 가져오기
-def graphs(x,docs_input):
-    generation_config = GenerationConfig(
-        temperature=1,
-        top_p=0.8,
-        top_k=100,
-        max_new_tokens=300,
-        early_stopping=True,
-        do_sample=True,
-    )
-    template = f"""### instruction:
-        아래 문서는 그래프에 대한 해석이다.
-        문서에 주어진 내용만을 이용해서 답하고 문서에서 근거를 찾을 수 없거나 답변하기 모호하면 정보를 찾을 수 없습니다. 라고 답변해줘.
+# def graphs(x,docs_input):
+#     generation_config = GenerationConfig(
+#         temperature=1,
+#         top_p=0.8,
+#         top_k=100,
+#         max_new_tokens=300,
+#         early_stopping=True,
+#         do_sample=True,
+#     )
+#     template = f"""### instruction:
+#         아래 문서는 그래프에 대한 해석이다.
+#         문서에 주어진 내용만을 이용해서 답하고 문서에서 근거를 찾을 수 없거나 답변하기 모호하면 정보를 찾을 수 없습니다. 라고 답변해줘.
 
-        문서: {docs_input}
-        질문 = {x}\n\n### Response:
-        output ():
-    """
+#         문서: {docs_input}
+#         질문 = {x}\n\n### Response:
+#         output ():
+#     """
 
-    q = template
+#     q = template
 
-    gened = model.generate(
-        **tokenizer(
-            q,
-            return_tensors='pt',
-            return_token_type_ids=False
-        ).to('cuda'),
-        generation_config=generation_config,
-        pad_token_id=tokenizer.eos_token_id,
-        eos_token_id=tokenizer.eos_token_id,
-        streamer=streamer,
-    )
-    result_str = tokenizer.decode(gened[0])
+#     gened = model.generate(
+#         **tokenizer(
+#             q,
+#             return_tensors='pt',
+#             return_token_type_ids=False
+#         ).to('cuda'),
+#         generation_config=generation_config,
+#         pad_token_id=tokenizer.eos_token_id,
+#         eos_token_id=tokenizer.eos_token_id,
+#         streamer=streamer,
+#     )
+#     result_str = tokenizer.decode(gened[0])
 
-    start_tag = f"[/INST]"
-    start_index = result_str.find(start_tag)
+#     start_tag = f"[/INST]"
+#     start_index = result_str.find(start_tag)
 
-    if start_index != -1:
-        result_str = result_str[start_index + len(start_tag):].strip()
-    return result_str
+#     if start_index != -1:
+#         result_str = result_str[start_index + len(start_tag):].strip()
+#     return result_str
 
 # 질문과 관련된 비슷한 질문 생성
 def make_similar_query(x):
