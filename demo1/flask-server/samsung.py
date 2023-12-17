@@ -478,6 +478,8 @@ def process_query():
     #Reorded_docs가 최종 쿼리가 된다
     query_final=reordered_docs
 
+    query_final = handle_query(query, query_final)
+
     return jsonify({"response": list(query_final)})
 
 
