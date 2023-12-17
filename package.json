@@ -2,7 +2,7 @@
   "name": "chatbot",
   "version": "0.1.0",
   "private": false,
-  "proxy" : "http://86.127.240.108:25383/",
+  "proxy" : "http://36.225.168.67:40225/",
   "dependencies": {
     "@babel/runtime": "^7.23.5",
     "@testing-library/jest-dom": "^5.17.0",
