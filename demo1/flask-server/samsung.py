@@ -482,4 +482,4 @@ def handle_query(query):
     return gen_final(query, query_final)
 
 if __name__ == "__main__":
-    app.run(debug = True)
+    app.run(host='0.0.0.0', port=5000)
