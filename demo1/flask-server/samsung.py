@@ -484,7 +484,7 @@ def process_query():
 
 
 
-def handle_query(query):
+def handle_query(query, query_final):
     return gen_final(query, query_final)
 
 if __name__ == "__main__":
