@@ -212,7 +212,7 @@ def make_similar_query(x):
         top_p=0.8,
         top_k=100,
         max_new_tokens=60,
-        early_stopping=True,
+        early_stopping=False,
         do_sample=True,
     )
     # 비슷한 문장을 두개 만들어줌. 쿼리가 조금만 달라져도 가지고 오는 문서가 다르기에 - 질문과 관련된 문서 가지고올 확률 높아짐
@@ -254,7 +254,7 @@ def find_core(x):
         top_p=1,
         top_k=100,
         max_new_tokens=40,
-        early_stopping=True,
+        early_stopping=False,
         do_sample=True,
     )
     template = f"""### instruction:
@@ -293,7 +293,7 @@ def gen_final(x,docs_input):
         top_p=0.8,
         top_k=100,
         max_new_tokens=300,
-        early_stopping=True,
+        early_stopping=False,
         do_sample=True,
         repetition_penalty=1.2,
     )
