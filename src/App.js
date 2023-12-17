@@ -18,7 +18,7 @@ const App = () => {
     ]);
 
     try {
-      const response = await fetch("http://79.116.51.212:20848/process_query", {
+      const response = await fetch("process_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

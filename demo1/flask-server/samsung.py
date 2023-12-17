@@ -379,7 +379,7 @@ def replace_keywords(query):
 
 
 query=''
-@app.route('/process_query')
+@app.route('/process_query', methods=['POST'])
 def process_query():
 
     data = request.json
