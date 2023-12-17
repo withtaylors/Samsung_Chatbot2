@@ -377,6 +377,9 @@ def replace_keywords(query):
         query = re.sub(re.compile(eng, re.IGNORECASE), kor, query)
     return query
 
+@app.route('/')
+def index():
+    return "Welcome to the API."
 
 query=''
 @app.route('/process_query', methods=['POST'])
@@ -475,7 +478,8 @@ def process_query():
     #Reorded_docs가 최종 쿼리가 된다
     query_final=reordered_docs
 
-    return jsonify({"response": query_final})
+    return jsonify({"response": list(query_final)})
+
 
 
 def handle_query(query):

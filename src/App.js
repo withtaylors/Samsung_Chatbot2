@@ -18,7 +18,7 @@ const App = () => {
     ]);
 
     try {
-      const response = await fetch("process_query", {
+      const response = await fetch("/process_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
