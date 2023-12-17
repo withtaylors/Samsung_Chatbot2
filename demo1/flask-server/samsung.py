@@ -453,36 +453,34 @@ def process_query():
 
     # 1차적인 답변 생성
     core=find_core(query)
-    docs = ensemble_retriever.get_relevant_documents(query)
+    #docs = ensemble_retriever.get_relevant_documents(query)
     #docs = [doc.page_content for doc in docs]
     #core = ','.join(okt.nouns(query))
-    docs2 =ensemble_retriever.get_relevant_documents(core)
+    #docs2 =ensemble_retriever.get_relevant_documents(core)
     #docs2 = [doc.page_content for doc in docs2]
-    docs3 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[1])
+    #docs3 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[1])
     #docs3 = [doc.page_content for doc in docs3]
-    docs4 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[2].replace('</s>',''))
+    #docs4 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[2].replace('</s>',''))
     #docs4 = [doc.page_content for doc in docs4]
-    docs_all=(docs+docs2+docs3+docs4)
-    documents=docs_all
+    #docs_all=(docs+docs2+docs3+docs4)
+    #documents=docs_all
 
     # 예시 사용
-    filtered_documents = filter_documents_by_query(documents, query)
+    #filtered_documents = filter_documents_by_query(documents, query)
 
     # 필터링된 문서 정보
     # filtered_documents_info = [(doc.page_content, doc.metadata) for doc in filtered_documents]
-    reordering = LongContextReorder()
-    reordered_docs = reordering.transform_documents(filtered_documents)
-    reordered_docs = [doc.page_content for doc in reordered_docs]
-    reordered_docs=set(reordered_docs)
+    #reordering = LongContextReorder()
+    #reordered_docs = reordering.transform_documents(filtered_documents)
+    #reordered_docs = [doc.page_content for doc in reordered_docs]
+    #reordered_docs=set(reordered_docs)
 
     #Reorded_docs가 최종 쿼리가 된다
-    query_final=reordered_docs
+    #query_final=reordered_docs
 
-    query_final = handle_query(query, query_final)
+    #query_final = handle_query(query, query_final)
 
-    return jsonify({"response": list(query_final)})
-
-
+    return jsonify({"response": list(core)})
 
 def handle_query(query, query_final):
     return gen_final(query, query_final)
