@@ -476,9 +476,27 @@ def process_query():
 
     #Reorded_docs가 최종 쿼리가 된다
     query_final=reordered_docs
+    response_text = gen_final(query, query_final)
     
-    return jsonify({"response": list(gen_final(query,query_final))})
+    # 문자열을 리스트에 추가 (전체 응답 텍스트를 하나의 요소로)
+    text_list = [response_text]
+    responses = extract_response(text_list)
 
+    return jsonify({"response": responses})
+    
+
+def extract_response(text_list):
+    extracted_responses = []
+    for text in text_list:
+        #print(f"Original text: {text}")  # 디버깅을 위한 출력
+        parts = text.split('### Response:')
+        #print(f"Split parts: {parts}")  # split 결과 확인
+        if len(parts) > 1:
+            response = parts[1].strip()
+            response = response.replace('</s>', '').strip()
+            extracted_responses.append(response)
+    return extracted_responses
+    
 def handle_query(query, query_final):
     return gen_final(query, query_final)
 
