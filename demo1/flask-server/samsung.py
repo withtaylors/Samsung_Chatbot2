@@ -40,39 +40,35 @@ embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
 
 # 나머지 코드는 이전과 동일합니다.
 
-def load_documents_from_file(filepath, encoding='utf-8'):
-    documents = []
-    try:
-        with open(filepath, 'r', encoding=encoding) as file:
-            for line in file:
-                documents.append(Document(page_content=line.strip()))
-        return documents
-    except Exception as e:
-        print(f"Error reading file {filepath}: {e}")
-        return None
+loader = DirectoryLoader("[FINAL] 그래프 전처리", loader_cls=TextLoader)
+data=loader.load()
 
-text_processing_file = "data_split_text.txt"
-data_split_text_documents = load_documents_from_file(text_processing_file, encoding='utf-8')
+loader_graph = DirectoryLoader("[FINAL] 그래프 전처리", loader_cls=TextLoader)
+data_graph=loader_graph.load()
 
-graph_processing_file = "data_split_graph.txt"
-data_split_graph_documents = load_documents_from_file(graph_processing_file, encoding='utf-8')
+# text split
+# chunk_overlap - 겹쳐서 나오는 내용 조절
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=100,chunk_overlap=30)
+data_split_text = text_splitter.split_documents(data)
+text_splitter2 = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=30)
+data_split_graph = text_splitter2.split_documents(data_graph)
 
-# FAISS.from_documents 메서드에 Document 객체 리스트와 embeddings 객체를 전달
-db_faiss_text = FAISS.from_documents(data_split_text_documents, embeddings)
-db_faiss_graph = FAISS.from_documents(data_split_graph_documents, embeddings)
+# embedding
+embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
+db_faiss_text = FAISS.from_documents(data_split_text, embeddings)
+db_faiss_graph = FAISS.from_documents(data_split_graph, embeddings)
 
 from rank_bm25 import BM25Okapi
 
 def make_tok(sent):
-    return sent.split(" ")
+  return sent.split(" ")
 
-# Document 객체의 page_content를 사용하여 corpus 생성
-corpus = [doc.page_content for doc in data_split_text_documents]
-tokenized_corpus = [make_tok(doc) for doc in corpus]
+corpus=  [i.page_content for i in data_split_text]
+tokenized_corpus = [make_tok(i.page_content) for i in data_split_text]
 bm25 = BM25Okapi(tokenized_corpus)
 
-corpus_graph = [doc.page_content for doc in data_split_graph_documents]
-tokenized_corpus_graph = [make_tok(doc) for doc in corpus_graph]
+corpus_graph=  [i.page_content for i in data_split_graph]
+tokenized_corpus_graph = [make_tok(i.page_content) for i in data_split_graph]
 bm25_graph = BM25Okapi(tokenized_corpus_graph)
 
 # search similarity - text
@@ -165,45 +161,45 @@ list_of_documents = [
 db_faiss_graghs = FAISS.from_documents(list_of_documents, embeddings)
 
 #def 그래프 -> 한번 시도해보기. 질문과 가장 관련된 파일을 가져오기
-# def graphs(x,docs_input):
-#     generation_config = GenerationConfig(
-#         temperature=1,
-#         top_p=0.8,
-#         top_k=100,
-#         max_new_tokens=300,
-#         early_stopping=True,
-#         do_sample=True,
-#     )
-#     template = f"""### instruction:
-#         아래 문서는 그래프에 대한 해석이다.
-#         문서에 주어진 내용만을 이용해서 답하고 문서에서 근거를 찾을 수 없거나 답변하기 모호하면 정보를 찾을 수 없습니다. 라고 답변해줘.
+def graphs(x,docs_input):
+    generation_config = GenerationConfig(
+        temperature=1,
+        top_p=0.8,
+        top_k=100,
+        max_new_tokens=300,
+        early_stopping=True,
+        do_sample=True,
+    )
+    template = f"""### instruction:
+        아래 문서는 그래프에 대한 해석이다.
+        문서에 주어진 내용만을 이용해서 답하고 문서에서 근거를 찾을 수 없거나 답변하기 모호하면 정보를 찾을 수 없습니다. 라고 답변해줘.
 
-#         문서: {docs_input}
-#         질문 = {x}\n\n### Response:
-#         output ():
-#     """
+        문서: {docs_input}
+        질문 = {x}\n\n### Response:
+        output ():
+    """
 
-#     q = template
+    q = template
 
-#     gened = model.generate(
-#         **tokenizer(
-#             q,
-#             return_tensors='pt',
-#             return_token_type_ids=False
-#         ).to('cuda'),
-#         generation_config=generation_config,
-#         pad_token_id=tokenizer.eos_token_id,
-#         eos_token_id=tokenizer.eos_token_id,
-#         streamer=streamer,
-#     )
-#     result_str = tokenizer.decode(gened[0])
+    gened = model.generate(
+        **tokenizer(
+            q,
+            return_tensors='pt',
+            return_token_type_ids=False
+        ).to('cuda'),
+        generation_config=generation_config,
+        pad_token_id=tokenizer.eos_token_id,
+        eos_token_id=tokenizer.eos_token_id,
+        streamer=streamer,
+    )
+    result_str = tokenizer.decode(gened[0])
 
-#     start_tag = f"[/INST]"
-#     start_index = result_str.find(start_tag)
+    start_tag = f"[/INST]"
+    start_index = result_str.find(start_tag)
 
-#     if start_index != -1:
-#         result_str = result_str[start_index + len(start_tag):].strip()
-#     return result_str
+    if start_index != -1:
+        result_str = result_str[start_index + len(start_tag):].strip()
+    return result_str
 
 # 질문과 관련된 비슷한 질문 생성
 def make_similar_query(x):
@@ -251,12 +247,13 @@ def make_similar_query(x):
 def find_core(x):
     generation_config = GenerationConfig(
         temperature=1,
-        top_p=1,
+        top_p=0.8,
         top_k=100,
-        max_new_tokens=40,
-        early_stopping=False,
+        max_new_tokens=300,
+        early_stopping=True,
         do_sample=True,
     )
+
     template = f"""### instruction:
         사실만을 말하는 금융 전문가로서 답해줘.
 
@@ -293,7 +290,7 @@ def gen_final(x,docs_input):
         top_p=0.8,
         top_k=100,
         max_new_tokens=300,
-        early_stopping=False,
+        early_stopping=True,
         do_sample=True,
         repetition_penalty=1.2,
     )
@@ -331,6 +328,7 @@ def gen_final(x,docs_input):
         # stopping_criteria=stopping_criteria,
         streamer=streamer,
     )
+    
     result_str = tokenizer.decode(gened[0])
 
     start_tag = f"[/INST]"
@@ -392,95 +390,94 @@ def process_query():
     query = replace_keywords(query)
 
     # 쿼리에 그래프가 언급되어 있으면 그래프 이미지를 제시하면서 답변한다
-    # if '그래프' in query:
+    if '그래프' in query:
       
-    #   results_with_scores = db_faiss_graghs.similarity_search(query,6)
-    #   graph_docs=[docssss.page_content for docssss in results_with_scores]
+      results_with_scores = db_faiss_graghs.similarity_search(query,6)
+      graph_docs=[docssss.page_content for docssss in results_with_scores]
 
-    #   for graph_index,gg in enumerate(graph_docs[0:3]):
-    #     print(str(graph_index+1)+'. '+str(gg))
+      for graph_index,gg in enumerate(graph_docs[0:3]):
+        print(str(graph_index+1)+'. '+str(gg))
 
-    # #   select_graph=input('\n찾으시는 그래프의 번호를 입력 해주세요. 만약 존재하지 않는다면 N을 입력 해주세요. ex) 1번 \n\n')
+    #   select_graph=input('\n찾으시는 그래프의 번호를 입력 해주세요. 만약 존재하지 않는다면 N을 입력 해주세요. ex) 1번 \n\n')
 
-    # #   if select_graph=='N' or select_graph=='n':
-    # #     for graph_index2,ggg in enumerate(graph_docs[3:6]):
-    # #       print(graph_index2+4,'.',ggg)
+    #   if select_graph=='N' or select_graph=='n':
+    #     for graph_index2,ggg in enumerate(graph_docs[3:6]):
+    #       print(graph_index2+4,'.',ggg)
 
-    #     select_graph2=input('\n다시 한번 찾으시는 그래프의 번호를 입력 해주세요. 만약 존재하지 않는다면 N을 입력 해주세요. ex) 1번 \n\n')
+        select_graph2=input('\n다시 한번 찾으시는 그래프의 번호를 입력 해주세요. 만약 존재하지 않는다면 N을 입력 해주세요. ex) 1번 \n\n')
 
-    #     if select_graph2=='N' or select_graph2=='n':
-    #       print('\n죄송합니다. 해당 문서에는 관련한 그래프가 존재하지 않습니다.\n')
-    #     else:
-    #       ss=graph_docs[int(select_graph2[0])-1]
-    #       try:
-    #         img_test = img.imread('[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
-    #         plt.imshow(img_test)
-    #         plt.show()
+        if select_graph2=='N' or select_graph2=='n':
+          print('\n죄송합니다. 해당 문서에는 관련한 그래프가 존재하지 않습니다.\n')
+        else:
+          ss=graph_docs[int(select_graph2[0])-1]
+          try:
+            img_test = img.imread('[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
+            plt.imshow(img_test)
+            plt.show()
 
-    #       except:
-    #         img_test = img.imread('[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
-    #         plt.imshow(img_test)
-    #         plt.show()
-    #       f = open('[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
-    #       lines = f.readlines()
+          except:
+            img_test = img.imread('[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
+            plt.imshow(img_test)
+            plt.show()
+          f = open('[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
+          lines = f.readlines()
 
-    #       # 각 줄을 '.' 기준으로 분리하여 출력
-    #       for line in lines:
-    #           parts = line.split('.')
-    #           for part in parts:
-    #               print(part)
+          # 각 줄을 '.' 기준으로 분리하여 출력
+          for line in lines:
+              parts = line.split('.')
+              for part in parts:
+                  print(part)
       
-    # sss=graph_docs[int(select_graph[0])-1]
-    # try:
-    #     img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
-    #     plt.imshow(img_test)
-    #     plt.show()
-    # except:
-    #     img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
-    #     plt.imshow(img_test)
-    #     plt.show()
-    # f = open('[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
-    # lines = f.readlines()
-
-    # for line in lines:
-    #     parts = line.split('.')
-    #     for part in parts:
-    #         part.replace('\n\n','')
-    #     print(part)
+        sss=graph_docs[int(select_graph[0])-1]
+        try:
+            img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
+            plt.imshow(img_test)
+            plt.show()
+        except:
+            img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
+            plt.imshow(img_test)
+            plt.show()
+        f = open('[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
+    
+        lines = f.readlines()
+    
+        for line in lines:
+            parts = line.split('.')
+            for part in parts:
+                part.replace('\n\n','')
+            print(part)
 
 
     outputs=make_similar_query(query)
 
     # 1차적인 답변 생성
     core=find_core(query)
-    #docs = ensemble_retriever.get_relevant_documents(query)
+    docs = ensemble_retriever.get_relevant_documents(query)
     #docs = [doc.page_content for doc in docs]
-    #core = ','.join(okt.nouns(query))
-    #docs2 =ensemble_retriever.get_relevant_documents(core)
+    #core = ','.join(Okt.nouns(query))
+    docs2 =ensemble_retriever.get_relevant_documents(core)
     #docs2 = [doc.page_content for doc in docs2]
-    #docs3 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[1])
+    docs3 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[1])
     #docs3 = [doc.page_content for doc in docs3]
-    #docs4 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[2].replace('</s>',''))
+    docs4 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[2].replace('</s>',''))
     #docs4 = [doc.page_content for doc in docs4]
-    #docs_all=(docs+docs2+docs3+docs4)
-    #documents=docs_all
+    docs_all=(docs+docs2+docs3+docs4)
+    documents=docs_all
 
-    # 예시 사용
-    #filtered_documents = filter_documents_by_query(documents, query)
+    #예시 사용
+    filtered_documents = filter_documents_by_query(documents, query)
 
-    # 필터링된 문서 정보
-    # filtered_documents_info = [(doc.page_content, doc.metadata) for doc in filtered_documents]
-    #reordering = LongContextReorder()
-    #reordered_docs = reordering.transform_documents(filtered_documents)
-    #reordered_docs = [doc.page_content for doc in reordered_docs]
-    #reordered_docs=set(reordered_docs)
+    #필터링된 문서 정보
+    #filtered_documents_info = [(doc.page_content, doc.metadata) for doc in filtered_documents]
+    reordering = LongContextReorder()
+    reordered_docs = reordering.transform_documents(filtered_documents)
+    reordered_docs = [doc.page_content for doc in reordered_docs]
+    reordered_docs=set(reordered_docs)
 
     #Reorded_docs가 최종 쿼리가 된다
-    #query_final=reordered_docs
-
-    #query_final = handle_query(query, query_final)
-
-    return jsonify({"response": list(core)})
+    query_final=reordered_docs
+    
+    return jsonify({"response": list(gen_final(query,query_final))})
 
 def handle_query(query, query_final):
     return gen_final(query, query_final)
