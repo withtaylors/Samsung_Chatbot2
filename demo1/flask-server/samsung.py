@@ -428,7 +428,7 @@ def process_query():
               for part in parts:
                   print(part)
       
-        sss=graph_docs[int(select_graph[0])-1]
+        sss=graph_docs[int(select_graph2[0])-1]
         try:
             img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
             plt.imshow(img_test)

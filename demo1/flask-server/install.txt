@@ -1,3 +1,9 @@
+ta-lib
+json
+base64
+peftmodel
+peftconfig
+csvloader
 peft
 Faiss-cpu
 Flask
@@ -5,7 +11,6 @@ flask-cors
 langchain
 bitsandbytes
 transformers
-peft
 accelerate
 datasets
 konlpy
