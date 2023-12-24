@@ -328,7 +328,7 @@ def gen_final(x,docs_input):
         # stopping_criteria=stopping_criteria,
         streamer=streamer,
     )
-    
+
     result_str = tokenizer.decode(gened[0])
 
     start_tag = f"[/INST]"
@@ -375,100 +375,32 @@ def replace_keywords(query):
         query = re.sub(re.compile(eng, re.IGNORECASE), kor, query)
     return query
 
+query=''
+
 @app.route('/')
 def index():
     return "Welcome to the API."
 
-query=''
-@app.route('/process_query', methods=['POST'])
-def process_query():
-
+@app.route('/get_graph_description', methods=['POST'])
+def get_graph_description():
     data = request.json
-    query = data['query']
+    graph_image_name = data['graphImageName']
 
-    # 쿼리를 처리하는 로직
-    query = replace_keywords(query)
-
-    # 쿼리에 그래프가 언급되어 있으면 그래프 이미지를 제시하면서 답변한다
-    if '그래프' in query:
-      
-      results_with_scores = db_faiss_graghs.similarity_search(query,6)
-      graph_docs=[docssss.page_content for docssss in results_with_scores]
-
-      for graph_index,gg in enumerate(graph_docs[0:3]):
-        print(str(graph_index+1)+'. '+str(gg))
-
-    #   select_graph=input('\n찾으시는 그래프의 번호를 입력 해주세요. 만약 존재하지 않는다면 N을 입력 해주세요. ex) 1번 \n\n')
-
-    #   if select_graph=='N' or select_graph=='n':
-    #     for graph_index2,ggg in enumerate(graph_docs[3:6]):
-    #       print(graph_index2+4,'.',ggg)
-
-        select_graph2=input('\n다시 한번 찾으시는 그래프의 번호를 입력 해주세요. 만약 존재하지 않는다면 N을 입력 해주세요. ex) 1번 \n\n')
-
-        if select_graph2=='N' or select_graph2=='n':
-          print('\n죄송합니다. 해당 문서에는 관련한 그래프가 존재하지 않습니다.\n')
-        else:
-          ss=graph_docs[int(select_graph2[0])-1]
-          try:
-            img_test = img.imread('[FINAL] 그래프 png 파일/'+ss+'.png의 사본')
-            plt.imshow(img_test)
-            plt.show()
-
-          except:
-            img_test = img.imread('[FINAL] 그래프 png 파일/'+ss+'.PNG의 사본')
-            plt.imshow(img_test)
-            plt.show()
-          f = open('[FINAL] 그래프 전처리/'+ss.split('_')[0]+'/'+ss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
-          lines = f.readlines()
-
-          # 각 줄을 '.' 기준으로 분리하여 출력
-          for line in lines:
-              parts = line.split('.')
-              for part in parts:
-                  print(part)
-      
-        sss=graph_docs[int(select_graph2[0])-1]
-        try:
-            img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.png의 사본')
-            plt.imshow(img_test)
-            plt.show()
-        except:
-            img_test = img.imread('[FINAL] 그래프 png 파일/'+sss+'.PNG의 사본')
-            plt.imshow(img_test)
-            plt.show()
-        f = open('[FINAL] 그래프 전처리/'+sss.split('_')[0]+'/'+sss+'.txt','r', encoding='utf-8')     # mode = 부분은 생략해도 됨
-    
-        lines = f.readlines()
-    
-        for line in lines:
-            parts = line.split('.')
-            for part in parts:
-                part.replace('\n\n','')
-            print(part)
-
-
-    outputs=make_similar_query(query)
+    outputs=make_similar_query(graph_image_name)
 
     # 1차적인 답변 생성
-    core=find_core(query)
-    docs = ensemble_retriever.get_relevant_documents(query)
-    #docs = [doc.page_content for doc in docs]
-    #core = ','.join(Okt.nouns(query))
+    core=find_core(graph_image_name)
+    docs = ensemble_retriever.get_relevant_documents(graph_image_name)
     docs2 =ensemble_retriever.get_relevant_documents(core)
-    #docs2 = [doc.page_content for doc in docs2]
     docs3 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[1])
-    #docs3 = [doc.page_content for doc in docs3]
     docs4 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[2].replace('</s>',''))
-    #docs4 = [doc.page_content for doc in docs4]
     docs_all=(docs+docs2+docs3+docs4)
     documents=docs_all
 
     #예시 사용
-    filtered_documents = filter_documents_by_query(documents, query)
+    filtered_documents = filter_documents_by_query(documents, graph_image_name)
 
     #필터링된 문서 정보
-    #filtered_documents_info = [(doc.page_content, doc.metadata) for doc in filtered_documents]
     reordering = LongContextReorder()
     reordered_docs = reordering.transform_documents(filtered_documents)
     reordered_docs = [doc.page_content for doc in reordered_docs]
@@ -476,14 +408,69 @@ def process_query():
 
     #Reorded_docs가 최종 쿼리가 된다
     query_final=reordered_docs
-    response_text = gen_final(query, query_final)
-    
+    response_text = gen_final(graph_image_name, query_final)
+
     # 문자열을 리스트에 추가 (전체 응답 텍스트를 하나의 요소로)
     text_list = [response_text]
     responses = extract_response(text_list)
 
-    return jsonify({"response": responses})
-    
+    return jsonify({"graphDescription": responses})
+
+@app.route('/process_query', methods=['POST'])
+def process_query():
+
+    data = request.json
+    query = data['query']
+    responses = {}
+    graph_image_names = {}
+
+    # 쿼리를 처리하는 로직
+    query = replace_keywords(query)
+    # 쿼리에 그래프가 언급되어 있으면 그래프 이미지를 제시하면서 답변한다
+    if '그래프' in query:
+
+        results_with_scores = db_faiss_graghs.similarity_search(query,6)
+        graph_docs=[docssss.page_content for docssss in results_with_scores]
+
+        for graph_index,gg in enumerate(graph_docs[0:3]):
+            graph_image_names = [str(g) for g in graph_docs[0:3]]
+    else :
+        outputs=make_similar_query(query)
+
+        # 1차적인 답변 생성
+        core=find_core(query)
+        docs = ensemble_retriever.get_relevant_documents(query)
+        #docs = [doc.page_content for doc in docs]
+        #core = ','.join(Okt.nouns(query))
+        docs2 =ensemble_retriever.get_relevant_documents(core)
+        #docs2 = [doc.page_content for doc in docs2]
+        docs3 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[1])
+        #docs3 = [doc.page_content for doc in docs3]
+        docs4 =ensemble_retriever.get_relevant_documents(outputs.split('\n')[2].replace('</s>',''))
+        #docs4 = [doc.page_content for doc in docs4]
+        docs_all=(docs+docs2+docs3+docs4)
+        documents=docs_all
+
+        #예시 사용
+        filtered_documents = filter_documents_by_query(documents, query)
+
+        #필터링된 문서 정보
+        #filtered_documents_info = [(doc.page_content, doc.metadata) for doc in filtered_documents]
+        reordering = LongContextReorder()
+        reordered_docs = reordering.transform_documents(filtered_documents)
+        reordered_docs = [doc.page_content for doc in reordered_docs]
+        reordered_docs=set(reordered_docs)
+
+        #Reorded_docs가 최종 쿼리가 된다
+        query_final=reordered_docs
+        response_text = gen_final(query, query_final)
+
+        # 문자열을 리스트에 추가 (전체 응답 텍스트를 하나의 요소로)
+        text_list = [response_text]
+        responses = extract_response(text_list)
+
+    return jsonify({"response": responses, "graphImages": graph_image_names})
+
 
 def extract_response(text_list):
     extracted_responses = []
@@ -496,7 +483,7 @@ def extract_response(text_list):
             response = response.replace('</s>', '').strip()
             extracted_responses.append(response)
     return extracted_responses
-    
+
 def handle_query(query, query_final):
     return gen_final(query, query_final)
 
