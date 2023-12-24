@@ -12,6 +12,7 @@ const App = () => {
 
   const handleRefresh = () => {
     setMessages([]);
+    setSelectedGraphImageName(null); // 선택된 그래프 이미지 이름 초기화
     scrollToBottom();
   };
 
@@ -34,11 +35,12 @@ const App = () => {
         { text: data.response, isUser: false },
       ]);
 
-      // 그래프 이미지 이름들을 상태 변수에 저장
-      if (data.graphImages) {
+      // '그래프' 키워드가 메시지에 포함되어 있는 경우에만 그래프 목록을 업데이트
+      if (message.includes("그래프") && data.graphImages) {
         setGraphImageNames(data.graphImages);
+      } else {
+        setGraphImageNames([]); // 그렇지 않으면 목록을 비웁니다
       }
-
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -64,12 +66,12 @@ const App = () => {
 
       const data = await response.json();
 
-      // 받은 그래프 설명을 메시지에 추가
+      // 받은 그래프 설명과 선택된 이미지 이름을 메시지에 추가
       setMessages((prevMessages) => [
         ...prevMessages,
+        { text: `선택된 그래프 이미지: ${imageName}`, isUser: false },
         { text: data.graphDescription, isUser: false },
       ]);
-      
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -100,16 +102,16 @@ const App = () => {
 
   return (
     <div className="app">
-      <div className="chat-box" style={{ whiteSpace: 'pre-wrap' }}>
+      <div className="chat-box" style={{ whiteSpace: "pre-wrap" }}>
         <h1>삼성증권 LLM 챗봇</h1>
         <MessageList
-           messages={messages}
-           currentTypingId={currentTypingId}
-           onEndTyping={handleEndTyping}
-           messagesListRef={messagesListRef}
-           graphImageNames={graphImageNames}
-           selectedGraphImageName={selectedGraphImageName}
-           onGraphSelection={handleGraphSelection}
+          messages={messages}
+          currentTypingId={currentTypingId}
+          onEndTyping={handleEndTyping}
+          messagesListRef={messagesListRef}
+          graphImageNames={graphImageNames}
+          selectedGraphImageName={selectedGraphImageName}
+          onGraphSelection={handleGraphSelection}
         />
         <MessageForm
           onSendMessage={handleSendMessage}
@@ -127,7 +129,7 @@ const MessageList = ({
   messagesListRef,
   graphImageNames,
   selectedGraphImageName,
-  onGraphSelection
+  onGraphSelection,
 }) => (
   <div className="messages-list" ref={messagesListRef}>
     {messages.map((message, index) => (
@@ -146,14 +148,18 @@ const MessageList = ({
 
     {/* 선택된 그래프 이미지 표시 */}
     {selectedGraphImageName && (
-      <div className="selected-graph-container">
-        <img src={`/Samsung_Chatbot2/src/그래프 png 파일/${selectedGraphImageName}.png의 사본.png`} alt="Selected Graph" className="selected-graph-image" />
-
-      </div>
+      <>
+        <div>Selected Image Name: {selectedGraphImageName}</div>
+        <div className="selected-graph-container">
+          <img
+            src={`src/[FINAL] 그래프 png 파일/${selectedGraphImageName}.png`}
+            className="selected-graph-image"
+          />
+        </div>
+      </>
     )}
   </div>
 );
-
 
 const Message = ({
   text,
@@ -162,15 +168,19 @@ const Message = ({
   id,
   onEndTyping,
   currentTypingId,
-  graphImageNames, // 그래프 이미지 이름들
-  onGraphSelection, // 그래프 선택 핸들러
+  graphImageNames = [], // 기본값을 빈 배열로 설정
+  onGraphSelection,
 }) => {
-
   const isEmpty = (obj) => {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
   };
 
-  const messageText = typeof text === 'object' ? (isEmpty(text) ? '' : JSON.stringify(text)) : text;
+  const messageText =
+    typeof text === "object"
+      ? isEmpty(text)
+        ? ""
+        : JSON.stringify(text)
+      : text;
 
   return (
     <div className={isUser ? "user-message" : "ai-message"}>
@@ -185,19 +195,26 @@ const Message = ({
           <p>
             <b>{isUser ? "You " : "AI "}</b>: {messageText}
           </p>
-          {!isUser && graphImageNames && graphImageNames.length > 0 && 
-            graphImageNames.map((imageName, index) => (
-              <button key={index} onClick={() => onGraphSelection(imageName)}>
-                {imageName}
-              </button>
-            ))
-          }
+          {!isUser && graphImageNames.length > 0 && (
+            <div className="graph-list">
+              {graphImageNames.map((imageName, index) => (
+                <button
+                  key={`${imageName}-${index}`} // 고유한 키를 생성
+                  onClick={() =>
+                    onGraphSelection && onGraphSelection(imageName)
+                  }
+                  className="graph-list-item"
+                >
+                  {index + 1}. {imageName}
+                </button>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>
   );
 };
-
 
 const ErrorNotification = ({ message, onClose }) => {
   useEffect(() => {
