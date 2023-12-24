@@ -16,10 +16,6 @@ const App = () => {
   };
 
   const handleSendMessage = async (message) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { text: message, isUser: true },
-    ]);
 
     try {
       const response = await fetch("process_query", {
@@ -34,6 +30,7 @@ const App = () => {
 
       setMessages((prevMessages) => [
         ...prevMessages,
+        { text: message, isUser: true },
         { text: data.response, isUser: false },
       ]);
 

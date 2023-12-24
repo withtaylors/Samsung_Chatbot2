@@ -416,7 +416,7 @@ def get_graph_description():
     text_list = [response_text]
     responses = extract_response(text_list)
 
-    return jsonify({"response": responses})
+    return jsonify({"graphDescription": responses})
     
 @app.route('/process_query', methods=['POST'])
 def process_query():
