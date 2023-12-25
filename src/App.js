@@ -8,7 +8,7 @@ const App = () => {
 
   // 선택된 그래프 이미지 이름을 저장하는 상태 변수
   const [selectedGraphImageName, setSelectedGraphImageName] = useState(null);
-  const [graphImageNames, setGraphImageNames] = useState([]);
+  const [graphImageNames] = useState([]);
 
   const handleRefresh = () => {
     setMessages([]);
@@ -40,7 +40,6 @@ const App = () => {
         { text: message, isUser: true },
         newMessage,
       ]);
-
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -80,7 +79,6 @@ const App = () => {
         },
         { text: descriptionText, isUser: false }, // 여기서 descriptionText 사용
       ]);
-
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -112,7 +110,7 @@ const App = () => {
   return (
     <div className="app">
       <div className="chat-box" style={{ whiteSpace: "pre-wrap" }}>
-        <h1>삼성증권 LLM 챗봇</h1>
+        <h1>삼성증권 sLLM 투자정보 검색 챗봇</h1>
         <MessageList
           messages={messages}
           currentTypingId={currentTypingId}
@@ -136,8 +134,6 @@ const MessageList = ({
   currentTypingId,
   onEndTyping,
   messagesListRef,
-  graphImageNames,
-  selectedGraphImageName,
   onGraphSelection,
 }) => (
   <div className="messages-list" ref={messagesListRef}>
@@ -182,7 +178,6 @@ const Message = ({
   graphImageNames = [], // 기본값을 빈 배열로 설정
   onGraphSelection,
 }) => {
-
   console.log("imageUrl:", imageUrl);
   console.log("graphImageNames:", graphImageNames);
 
