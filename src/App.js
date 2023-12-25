@@ -17,9 +17,8 @@ const App = () => {
   };
 
   const handleSendMessage = async (message) => {
-
     try {
-      const response = await fetch("process_query", {
+      const response = await fetch("/process_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,18 +28,19 @@ const App = () => {
 
       const data = await response.json();
 
+      // 새로운 메시지 객체에 그래프 목록 추가
+      const newMessage = {
+        text: data.response,
+        isUser: false,
+        graphImageNames: message.includes("그래프") ? data.graphImages : [],
+      };
+
       setMessages((prevMessages) => [
         ...prevMessages,
         { text: message, isUser: true },
-        { text: data.response, isUser: false },
+        newMessage,
       ]);
 
-      // '그래프' 키워드가 메시지에 포함되어 있는 경우에만 그래프 목록을 업데이트
-      if (message.includes("그래프") && data.graphImages) {
-        setGraphImageNames(data.graphImages);
-      } else {
-        setGraphImageNames([]); // 그렇지 않으면 목록을 비웁니다
-      }
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -55,6 +55,7 @@ const App = () => {
     setSelectedGraphImageName(imageName);
 
     // 백엔드에 선택된 그래프 정보 요청
+    // 백엔드에 선택된 그래프 정보 요청
     try {
       const response = await fetch("/get_graph_description", {
         method: "POST",
@@ -65,13 +66,21 @@ const App = () => {
       });
 
       const data = await response.json();
+      // 배열을 하나의 문자열로 변환
+      const descriptionText = data.graphDescription.join(" ");
+      const imageUrl = data.imageUrl; // Flask에서 받은 이미지 URL
 
       // 받은 그래프 설명과 선택된 이미지 이름을 메시지에 추가
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: `선택된 그래프 이미지: ${imageName}`, isUser: false },
-        { text: data.graphDescription, isUser: false },
+        {
+          text: `선택된 그래프 이미지: ${imageName}`,
+          isUser: false,
+          imageUrl: imageUrl, // Flask에서 받은 이미지 URL을 사용
+        },
+        { text: descriptionText, isUser: false }, // 여기서 descriptionText 사용
       ]);
+
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -137,16 +146,17 @@ const MessageList = ({
         key={index}
         text={message.text}
         isUser={message.isUser}
+        imageUrl={message.imageUrl}
         isTyping={message.isTyping}
         id={message.id}
         onEndTyping={onEndTyping}
         currentTypingId={currentTypingId}
-        graphImageNames={message.isUser ? null : graphImageNames} // AI의 메시지에만 그래프 이름을 보냄
+        graphImageNames={message.graphImageNames || []} // 메시지 객체의 그래프 목록을 사용
         onGraphSelection={onGraphSelection}
       />
     ))}
 
-    {/* 선택된 그래프 이미지 표시 */}
+    {/* 선택된 그래프 이미지 표시
     {selectedGraphImageName && (
       <>
         <div>Selected Image Name: {selectedGraphImageName}</div>
@@ -157,13 +167,14 @@ const MessageList = ({
           />
         </div>
       </>
-    )}
+    )} */}
   </div>
 );
 
 const Message = ({
   text,
   isUser,
+  imageUrl,
   isTyping,
   id,
   onEndTyping,
@@ -171,6 +182,10 @@ const Message = ({
   graphImageNames = [], // 기본값을 빈 배열로 설정
   onGraphSelection,
 }) => {
+
+  console.log("imageUrl:", imageUrl);
+  console.log("graphImageNames:", graphImageNames);
+
   const isEmpty = (obj) => {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
   };
@@ -195,6 +210,9 @@ const Message = ({
           <p>
             <b>{isUser ? "You " : "AI "}</b>: {messageText}
           </p>
+          {imageUrl && (
+            <img src={imageUrl} alt="Graph" className="message-image" />
+          )}
           {!isUser && graphImageNames.length > 0 && (
             <div className="graph-list">
               {graphImageNames.map((imageName, index) => (

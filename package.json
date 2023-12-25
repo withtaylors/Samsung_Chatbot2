@@ -2,20 +2,19 @@
   "name": "chatbot",
   "version": "0.1.0",
   "private": false,
-
-  "proxy" : "http://79.117.49.116:21840/",
-
+  "proxy": "http://localhost:5000/",
   "dependencies": {
     "@babel/runtime": "^7.23.5",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "babel-runtime": "^6.26.0",
+    "core-js": "^3.23.3",
+    "express": "^4.18.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "core-js": "^3.23.3"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -40,5 +39,18 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "description": "<h3> 삼성증권 LLM 모델 챗봇 </h3>\r <br>",
+  "main": "index.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/withtaylors/Samsung_Chatbot2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/withtaylors/Samsung_Chatbot2/issues"
   }
 }
