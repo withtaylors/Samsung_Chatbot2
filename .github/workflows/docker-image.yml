@@ -18,7 +18,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Log in to Docker Hub
-        run: docker login -u realcommang -p samsung48
+        run: docker login -u realcommang -p Studyhar4!
 
       - name: Build and Push Flask Docker image
         run: |
