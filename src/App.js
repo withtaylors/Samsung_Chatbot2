@@ -18,7 +18,7 @@ const App = () => {
 
   const handleSendMessage = async (message) => {
     try {
-      const response = await fetch("process_query", {
+      const response = await fetch("/process_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,6 +40,7 @@ const App = () => {
         { text: message, isUser: true },
         newMessage,
       ]);
+
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -54,6 +55,7 @@ const App = () => {
     setSelectedGraphImageName(imageName);
 
     // 백엔드에 선택된 그래프 정보 요청
+    // 백엔드에 선택된 그래프 정보 요청
     try {
       const response = await fetch("/get_graph_description", {
         method: "POST",
@@ -66,18 +68,19 @@ const App = () => {
       const data = await response.json();
       // 배열을 하나의 문자열로 변환
       const descriptionText = data.graphDescription.join(" ");
+      const imageUrl = data.imageUrl; // Flask에서 받은 이미지 URL
 
       // 받은 그래프 설명과 선택된 이미지 이름을 메시지에 추가
-      // 받은 그래프 설명을 문자열로 메시지에 추가
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           text: `선택된 그래프 이미지: ${imageName}`,
           isUser: false,
-          imageUrl: `/[FINAL] 그래프 png 파일/${imageName}.png`,
+          imageUrl: imageUrl, // Flask에서 받은 이미지 URL을 사용
         },
         { text: descriptionText, isUser: false }, // 여기서 descriptionText 사용
       ]);
+
     } catch (error) {
       console.error("Error:", error);
       setMessages((prevMessages) => [
@@ -143,6 +146,7 @@ const MessageList = ({
         key={index}
         text={message.text}
         isUser={message.isUser}
+        imageUrl={message.imageUrl}
         isTyping={message.isTyping}
         id={message.id}
         onEndTyping={onEndTyping}
@@ -178,6 +182,10 @@ const Message = ({
   graphImageNames = [], // 기본값을 빈 배열로 설정
   onGraphSelection,
 }) => {
+
+  console.log("imageUrl:", imageUrl);
+  console.log("graphImageNames:", graphImageNames);
+
   const isEmpty = (obj) => {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
   };

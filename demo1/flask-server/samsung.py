@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, url_for
 from flask_cors import CORS
 import json
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='[FINAL] 그래프 png 파일')
+
 CORS(app)
 
 from langchain.schema import Document
@@ -415,8 +416,9 @@ def get_graph_description():
     # 문자열을 리스트에 추가 (전체 응답 텍스트를 하나의 요소로)
     text_list = [response_text]
     responses = extract_response(text_list)
+    image_url = url_for('static', filename=graph_image_name)
 
-    return jsonify({"graphDescription": responses})
+    return jsonify({"graphDescription": responses, "imageUrl": image_url})
     
 @app.route('/process_query', methods=['POST'])
 def process_query():
@@ -490,4 +492,4 @@ def handle_query(query, query_final):
     return gen_final(query, query_final)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=3000)
+    app.run(host='0.0.0.0', port=5000)
